@@ -11,11 +11,11 @@
 -  **Misappropriation of authorship**
 -  **Obtaining code from unofficial sources**:
   > Code must be obtained **exclusively from official repository**:  
-  > https://github.com/iiiiarvin/[YoungArvin]
+  > https://github.com/iiiiarvin/Anonymous-chat-bot
 
 ### Legal Requirements:
 1. **Branding Preservation**:  
-   > Inclusion of `Copyright © 2025 https://github.com/iiiiarvin/[YoungArvin]` in all copies is mandatory
+   > Inclusion of `Copyright © 2025 YoungArvin` in all copies is mandatory
 
 2. **Modification Obligations**:
    - 📝 Clear documentation of changes made
@@ -52,11 +52,11 @@ Copyright holder reserves the right to:
 -  **انتساب نادرست مالکیت** (ادعای تألیف اثر)
 -  **دریافت کد از منابع غیررسمی**:
   > دریافت کد **فقط از مخزن رسمی** مجاز است:  
-  > `https://github.com/iiiiarvin/[YoungArvin]`
+  > https://github.com/iiiiarvin/Anonymous-chat-bot
 
 ### الزامات قانونی:
 1. **حفظ نشان تجاری**:  
-   > درج عبارت `حق نشر © 2025 https://github.com/iiiiarvin/[YoungArvin]` در تمامی نسخه‌ها الزامی است
+   > درج عبارت `حق نشر © 2025 YoungArvin` در تمامی نسخه‌ها الزامی است
 
 2. **تعهدات هنگام اصلاح کد**:
    - 📝 ثبت واضح تغییرات اعمال شده
