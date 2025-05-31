@@ -77,3 +77,8 @@ Copyright holder reserves the right to:
 -  **ابطال خودکار مجوز** در صورت نقض مفاد
 -  **پیگرد قانونی** متخلفین طبق قوانین کپی‌رایت
 -  **حق مطالبه خسارت** برای مالک اثر
+
+
+## Telegram : @YoungArvin
+## Bale : @YoungArvin
+## GitHub : https://github.com/iiiiArvin
