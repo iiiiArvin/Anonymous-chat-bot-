@@ -561,7 +561,7 @@ def referral_link1(call):
     if not check_channels(user_id,msg=None):
         return
     code = get_referral_code(user_id)
-    referral_link = f"https://ble.ir/?start=ref-{code}"
+    referral_link = f"https://ble.ir/{bot.get_me().username}?start=ref-{code}"
     bot.edit_message_text(f"🔗 لینک دعوت شما:\n{referral_link}\n\nبا هر دعوت موفق 2 سکه دریافت کنید!", chat_id=user_id, message_id=call.message.message_id,
                           reply_markup=get_inline_main_menu())
     
@@ -582,7 +582,7 @@ def anon_link1(call):
     if not check_channels(user_id,msg=None):
         return
     link_id = get_anonymous_link(user_id)
-    anon_link = f"https://ble.ir/?start=send-{link_id}"
+    anon_link = f"https://ble.ir/{bot.get_me().username}?start=send-{link_id}"
     bot.edit_message_text(f"🔗 لینک ناشناس شما:\n{anon_link}\n\nهرکس این لینک را باز کند می‌تواند به شما پیام ناشناس ارسال کند!", chat_id=user_id, message_id=call.message.message_id,
                           reply_markup=get_inline_main_menu())
     
