@@ -22,7 +22,6 @@
 
 ## README LICENSE
 
-
 import telebot
 from telebot import types
 import sqlite3
@@ -37,10 +36,14 @@ from datetime import datetime, timedelta
 TOKEN = ''
 ADMIN_IDS = {}
 ADMIN_CHAT = 
-# متفیر link رو باید با :  https://t.me/ یا https://ble.ir/ جایگذین کنید. 
+ADMIN_USERNAME = "" 
+LINK = "" # متفیر link رو باید با :  https://t.me/ یا https://ble.ir/ جایگذین کنید. 
 
 bot = telebot.TeleBot(TOKEN)
 
+
+
+# --- دیتابیس
 
 db_lock = threading.Lock()
 
@@ -49,7 +52,6 @@ def get_db_connection():
     conn = sqlite3.connect('chat_users.db', check_same_thread=False)
     return conn
 
-# --- دیتابیس
 def init_db():
     conn = get_db_connection()
     cursor = conn.cursor()
@@ -234,6 +236,7 @@ def is_in_active_chat(user_id):
     return result is not None
 
 # --- منو
+
 def get_inline_main_menu():
     markup = types.InlineKeyboardMarkup()
     btn_start = types.InlineKeyboardButton("شروع چت", callback_data="start_chat")
@@ -389,7 +392,7 @@ def check_user_gender(user_id):
             conn.close()
             bot.send_message(
                 user_id,
-                "به ربات چت ناشناس خوش آمدید!\n\nً جنسیت خود را انتخاب کنید:",
+                "به ربات چت ناشناس خوش آمدید!\n\nلطفاً جنسیت خود را انتخاب کنید:",
                 reply_markup=get_inline_gender_selection()
             )
             return False
@@ -399,12 +402,12 @@ def check_user_gender(user_id):
         if gender is None:
             bot.send_message(
                 user_id,
-                "ً ابتدا جنسیت خود را انتخاب کنید:",
+                "لطفاً ابتدا جنسیت خود را انتخاب کنید:",
                 reply_markup=get_inline_gender_selection()
             )
             return False
     return True
-# --- جوین اجباری
+
 def add_channel(chat_id, title, invite_link, expire_at):
     conn = get_db_connection()
     cur = conn.cursor()
@@ -422,7 +425,6 @@ def get_active_channels():
     channels = cur.fetchall()
     conn.close()
     return channels
-
 
 def check_channel_membership(chat_id, user_id):
     try:
@@ -472,7 +474,7 @@ def verify_membership(call):
     message_id = call.message.message_id
     re = (call.data.split("_")[2])
     if not check_channels(user_id,msg=None):
-        bot.send_message(user_id, " شما هنوز عضو کانال نشده‌اید!")
+        bot.send_message(user_id, "❌ شما هنوز عضو کانال نشده‌اید!")
         return
     bot.edit_message_text(
         chat_id=user_id,
@@ -488,13 +490,18 @@ def verify_membership(call):
         link_id = re.split("send-")[-1].strip()  
         anonymous_send_handler(user_id,link_id)
         return
+    
 # --- استارت
+
 @bot.message_handler(commands=['start'],chat_types=["private"])
 def start_handler(message):
     user_id = message.chat.id
     add_new_user(user_id)
     msg = message.text
     if not check_channels(user_id,msg):
+        return
+    if is_user_banned(user_id):
+        bot.send_message(user_id, "شما بن شده‌اید.")
         return
     if is_user_banned(user_id):
         bot.send_message(user_id, "شما بن شده‌اید.")
@@ -522,6 +529,7 @@ def start_handler(message):
     bot.send_message(user_id, welcome_text, reply_markup=get_inline_main_menu())
 
 # --- جنسیت
+
 @bot.callback_query_handler(func=lambda call: call.data.startswith("set_gender_")and call.message.chat.type == "private")
 def gender_callback(call):
     user_id = call.from_user.id
@@ -544,7 +552,7 @@ def gender_callback(call):
    
     bot.edit_message_text("منوی اصلی:", chat_id=user_id, message_id=call.message.message_id,
                           reply_markup=get_inline_main_menu())
-# --- هندل منو
+
 @bot.callback_query_handler(func=lambda call: call.data == "referral_link"and call.message.chat.type == "private")
 def referral_link1(call):
     user_id = call.from_user.id
@@ -562,7 +570,7 @@ def referral_link1(call):
     if not check_channels(user_id,msg=None):
         return
     code = get_referral_code(user_id)
-    referral_link = f"{link}{bot.get_me().username}?start=ref-{code}"
+    referral_link = f"https://{LINK}/{bot.get_me().username}?start=ref-{code}"
     bot.edit_message_text(f"🔗 لینک دعوت شما:\n{referral_link}\n\nبا هر دعوت موفق 2 سکه دریافت کنید!", chat_id=user_id, message_id=call.message.message_id,
                           reply_markup=get_inline_main_menu())
     
@@ -583,7 +591,7 @@ def anon_link1(call):
     if not check_channels(user_id,msg=None):
         return
     link_id = get_anonymous_link(user_id)
-    anon_link = f"{link}{bot.get_me().username}?start=send-{link_id}"
+    anon_link = f"https://{LINK}/{bot.get_me().username}?start=send-{link_id}"
     bot.edit_message_text(f"🔗 لینک ناشناس شما:\n{anon_link}\n\nهرکس این لینک را باز کند می‌تواند به شما پیام ناشناس ارسال کند!", chat_id=user_id, message_id=call.message.message_id,
                           reply_markup=get_inline_main_menu())
     
@@ -680,8 +688,10 @@ def buy_coins1(call):
         return
     if not check_channels(user_id,msg=None):
         return
-    bot.edit_message_text("خرید سکه \nامکان شارژ حساب با پاکت امکان پذیره برای شارژ حساب با پاکت به ای دی زیر مراجعه کنید.\n@sobhan_tesla:", chat_id=user_id, message_id=call.message.message_id,
+    bot.edit_message_text(f"خرید سکه \nامکان شارژ حساب با پاکت امکان پذیره برای شارژ حساب با پاکت به ای دی زیر مراجعه کنید.\n{ADMIN_USERNAME}:", chat_id=user_id, message_id=call.message.message_id,
                           reply_markup=get_buy_coins_menu())
+
+# --- ادامه کد
 
 @bot.callback_query_handler(func=lambda call: call.data == "support"and call.message.chat.type == "private")
 def support1(call):
@@ -698,8 +708,7 @@ def support1(call):
         return
     if not check_channels(user_id,msg=None):
         return
-    support_text = "برای پشتیبانی با ما تماس بگیرید:\nآیدی: "
-    bot.edit_message_text(support_text, chat_id=user_id, message_id=call.message.message_id,
+    bot.edit_message_text(f"برای پشتیبانی با ما تماس بگیرید:\nآیدی: {ADMIN_USERNAME}", chat_id=user_id, message_id=call.message.message_id,
                           reply_markup=get_inline_main_menu())
     
 @bot.callback_query_handler(func=lambda call: call.data == "help"and call.message.chat.type == "private")
@@ -727,8 +736,9 @@ def help1(call):
         )
     bot.edit_message_text(help_text, chat_id=user_id, message_id=call.message.message_id,
                           reply_markup=get_inline_main_menu())
-    
+
 # --- شروع چت
+    
 @bot.callback_query_handler(func=lambda call: call.data == "start_chat"and call.message.chat.type == "private")
 def start_chat_callback(call):
     user_id = call.from_user.id
@@ -752,7 +762,7 @@ def start_chat_callback(call):
         return 
     if not check_user_gender(user_id):
         return 
-    bot.edit_message_text("ً ترجیح شریک خود را انتخاب کنید:",user_id,call.message.message_id,reply_markup=get_inline_partner_preference())
+    bot.edit_message_text("لطفاً ترجیح شریک خود را انتخاب کنید:",user_id,call.message.message_id,reply_markup=get_inline_partner_preference())
     
 @bot.callback_query_handler(func=lambda call: call.data.startswith("pref_")and call.message.chat.type == "private")
 def partner_pref_callback(call):
@@ -805,6 +815,7 @@ def back_main_callback(call):
                           reply_markup=get_inline_main_menu())
 
 # --- پیدا کردن شریک
+
 def is_compatible(user_a, pref_a, user_b, pref_b, user_id, candidate_id):
     cond_a = (pref_a == "مهم نیست") or (user_b == pref_a)
     cond_b = (pref_b == "مهم نیست") or (user_a == pref_b)
@@ -922,7 +933,9 @@ def find_match_for_user(user_id, waiting_message_id):
         bot.send_message(user_id, "شما با یک کاربر پیدا شدید. شروع چت!", reply_markup=get_reply_active_chat_keyboard())
         bot.send_message(candidate_id, "شما با یک کاربر پیدا شدید. شروع چت!", reply_markup=get_reply_active_chat_keyboard())
         return
+
 # --- قطع چت
+
 @bot.callback_query_handler(func=lambda call: call.data == "disconnect_waiting"and call.message.chat.type == "private")
 def disconnect_callback(call):
     user_id = call.from_user.id
@@ -1012,7 +1025,7 @@ def report1(call):
 
     except Exception as e:
         print("Report Error:", e)
-        bot.edit_message_text("گزارش شما ثبت نشد. ً دوباره تلاش کنید.", chat_id=user_id, message_id=call.message.message_id)
+        bot.edit_message_text("گزارش شما ثبت نشد. لطفاً دوباره تلاش کنید.", chat_id=user_id, message_id=call.message.message_id)
 
 @bot.callback_query_handler(func=lambda call: call.data == "nthing"and call.message.chat.type == "private")
 def nthing1(call):
@@ -1035,6 +1048,8 @@ link_pattern = re.compile(
     re.IGNORECASE
 )
 
+# ---  رد بدل پیام
+
 @bot.message_handler(content_types=['text'])
 def relay_message(message):
     user_id = message.chat.id
@@ -1056,6 +1071,8 @@ def relay_message(message):
             bot.send_message(partner_id, message.text)
         except Exception as e:
             bot.send_message(user_id, "خطا در ارسال پیام به کاربر مقابل.")
+
+# ---  هندل لینک ناشناس
 
 @bot.message_handler(content_types=['photo', 'video', 'animation', 'document', 'audio', 'voice', 'sticker'],chat_types=["private"])
 def relay_media(message):
@@ -1115,14 +1132,14 @@ def anonymous_send_handler(user_id, link_id):
         row = cursor.fetchone()
         conn.close()
     if not row:
-        bot.send_message(user_id, " لینک نامعتبر است!")
+        bot.send_message(user_id, "❌ لینک نامعتبر است!")
         return
     markup = types.ReplyKeyboardMarkup(one_time_keyboard=True, resize_keyboard=True)
     cancel_button = types.KeyboardButton("لغو")
     markup.add(cancel_button)
 
    
-    prompt_msg = bot.send_message(user_id, "ً پیام خود (متن یا رسانه) را ارسال کنید:", reply_markup=markup)
+    prompt_msg = bot.send_message(user_id, "لطفاً پیام خود (متن یا رسانه) را ارسال کنید:", reply_markup=markup)
 
 
     bot.register_next_step_handler(prompt_msg, process_anonymous_message, link_id=link_id)
@@ -1134,7 +1151,7 @@ def process_anonymous_message(message, link_id):
         return
 
     if message.text == "لغو":
-        bot.send_message(user_id, " ارسال پیام لغو شد.", reply_markup=get_inline_main_menu())
+        bot.send_message(user_id, "❌ ارسال پیام لغو شد.", reply_markup=get_inline_main_menu())
         return
 
     content_type = message.content_type
@@ -1147,7 +1164,7 @@ def process_anonymous_message(message, link_id):
         row = cursor.fetchone()
         conn.close()
     if not row:
-        bot.send_message(user_id, " لینک نامعتبر است!")
+        bot.send_message(user_id, "❌ لینک نامعتبر است!")
         return
     target_user = row[0]
 
@@ -1210,6 +1227,8 @@ def process_anonymous_message(message, link_id):
     if forwarded:
         bot.send_message(user_id, "✅ پیام شما ارسال شد!", reply_markup=get_inline_main_menu())
 
+# ---  هندل رفال
+
 def referral_handler(user_id,referral_code):
     add_new_user(user_id)
     if is_user_in_waiting(user_id):
@@ -1238,6 +1257,8 @@ def referral_handler(user_id,referral_code):
             bot.send_message(user_id, "کد رفرال نامعتبر است.", reply_markup=get_inline_main_menu())
         conn.close()
 
+# --- ادمین
+
 def admin_panel(message):
     if message.from_user.id not in ADMIN_IDS:
         return
@@ -1263,6 +1284,7 @@ def admin_panel(message):
     types.InlineKeyboardButton("📡 مدیریت کانال‌ها", callback_data="admin_manage_channels")
     )
     bot.send_message(message.chat.id, "به بخش ادمین خوش آمدید. یک گزینه را انتخاب کنید:", reply_markup=markup)
+
 
 @bot.callback_query_handler(func=lambda call: call.data.startswith("admin_")and call.message.chat.type == "private")
 def admin_callbacks(call):
@@ -1290,7 +1312,7 @@ def admin_callbacks(call):
             ch_id, title, chat_id, expire = row
             text = f"📡 {title}\n🆔{chat_id}\n⏰ انقضا: {expire}"
             markup = types.InlineKeyboardMarkup()
-            markup.add(types.InlineKeyboardButton(" حذف", callback_data=f"admin_delete_channel_{ch_id}"))
+            markup.add(types.InlineKeyboardButton("❌ حذف", callback_data=f"admin_delete_channel_{ch_id}"))
             bot.send_message(call.message.chat.id, text, reply_markup=markup)
 
     elif call.data.startswith("admin_delete_channel_"):
@@ -1313,7 +1335,7 @@ def admin_callbacks(call):
             types.InlineKeyboardButton("➕ افزودن کانال", callback_data="admin_add_channel"),
             types.InlineKeyboardButton("📃 لیست کانال‌ها", callback_data="admin_list_channels")
         )
-        bot.edit_message_text("ً یکی از گزینه‌های مدیریت کانال را انتخاب کنید:", call.message.chat.id, call.message.message_id, reply_markup=markup)
+        bot.edit_message_text("لطفاً یکی از گزینه‌های مدیریت کانال را انتخاب کنید:", call.message.chat.id, call.message.message_id, reply_markup=markup)
     elif call.data == "admin_add_coins":
         if call.from_user.id not in ADMIN_IDS:
             return
@@ -1351,7 +1373,7 @@ admin_inputs = {}
 
 def start_add_channel(message):
     admin_inputs[message.from_user.id] = {}
-    msg = bot.send_message(message.chat.id, "مرحله 1️⃣: ً `chat_id` کانال را وارد کنید:", parse_mode="Markdown")
+    msg = bot.send_message(message.chat.id, "مرحله 1️⃣: لطفاً `chat_id` کانال را وارد کنید:", parse_mode="Markdown")
     bot.register_next_step_handler(msg, get_chat_id)
 
 def get_chat_id(message):
@@ -1366,11 +1388,11 @@ def get_chat_id(message):
 def get_title(message):
     title = message.text.strip()
     if not title:
-        msg = bot.send_message(message.chat.id, " نام کانال نمی‌تواند خالی باشد. دوباره وارد کنید:")
+        msg = bot.send_message(message.chat.id, "❌ نام کانال نمی‌تواند خالی باشد. دوباره وارد کنید:")
         bot.register_next_step_handler(msg, get_title)
         return
     admin_inputs[message.from_user.id]["title"] = title
-    msg = bot.send_message(message.chat.id, f"مرحله 3️⃣: حالا `لینک دعوت` کانال را وارد کنید:\n {link}  ")
+    msg = bot.send_message(message.chat.id, f"مرحله 3️⃣: حالا `لینک دعوت` کانال را وارد کنید:\n http://{LINK}/ ")
     bot.register_next_step_handler(msg, get_link)
 
 def get_link(message):
@@ -1378,7 +1400,7 @@ def get_link(message):
         link = message.text.strip()
         
         # if not link.startswith("http"):
-        #     error_text = " لینک باید با http یا https شروع شود. ً لینک صحیح وارد کنید:"
+        #     error_text = "❌ لینک باید با http یا https شروع شود. لطفاً لینک صحیح وارد کنید:"
         #     msg = bot.send_message(
         #         chat_id=message.chat.id,
         #         text=error_text
@@ -1389,7 +1411,7 @@ def get_link(message):
         admin_inputs[message.from_user.id]["link"] = link
         
         instruction_text = (
-            "مرحله 4️⃣: ً *زمان انقضا* را به صورت *HH:MM* وارد کنید:\n"
+            "مرحله 4️⃣: لطفاً *زمان انقضا* را به صورت *HH:MM* وارد کنید:\n"
             "مثال: 23:59\n"
             "00:30\n"
             "9999:00"
@@ -1404,7 +1426,7 @@ def get_link(message):
     
     except Exception as e:
         print(f"خطا در get_link: {e}")
-        bot.reply_to(message, " خطایی در پردازش رخ داد.")
+        bot.reply_to(message, "❌ خطایی در پردازش رخ داد.")
 
 def get_expire_date(message):
     try:
@@ -1446,7 +1468,7 @@ def get_expire_date(message):
     
     except (ValueError, IndexError):
         instruction_text = (
-            "مرحله 4️⃣: ً *زمان انقضا* را به صورت *HH:MM* وارد کنید:\n"
+            "مرحله 4️⃣: لطفاً *زمان انقضا* را به صورت *HH:MM* وارد کنید:\n"
             "مثال: 23:59\n"
             "00:30\n"
             "9999:00"
@@ -1461,7 +1483,7 @@ def get_expire_date(message):
         admin_inputs.pop(message.from_user.id, None)
         bot.send_message(
             message.chat.id,
-            f" خطای سیستمی: {str(e)}"
+            f"❌ خطای سیستمی: {str(e)}"
         )
 
 
@@ -1490,6 +1512,7 @@ def admin_dashboard(call):
         cursor.execute("SELECT COUNT(*) FROM banned_users")
         banned_users = cursor.fetchone()[0]
         conn.close()
+
     text = f"""
 داشبورد آماری:
 --------------------
@@ -1520,7 +1543,7 @@ def process_send_to_all_amount(message):
     try:
         amount = int(message.text)
         if amount <= 0:
-            bot.reply_to(message, " مقدار باید بزرگتر از صفر باشد!")
+            bot.reply_to(message, "❌ مقدار باید بزرگتر از صفر باشد!")
             return
 
         conn = get_db_connection()
@@ -1557,7 +1580,7 @@ def process_send_to_all_amount(message):
         """)
 
     except ValueError:
-        bot.reply_to(message, "  یک عدد معتبر وارد کنید!")
+        bot.reply_to(message, " لطفا یک عدد معتبر وارد کنید!")
 
 def add_coins(message):
     try:
@@ -1570,7 +1593,7 @@ def add_coins(message):
         bot.send_message(message.chat.id, f" {amount} سکه به کاربر {user_id} اضافه شد.")
         bot.send_message(user_id, f"✅ سکه شما به مقدار {amount} افزایش یافت")
     except:
-        bot.send_message(message.chat.id, "خطا در فرمت ورودی. ً به‌درستی وارد کنید: user_id amount")
+        bot.send_message(message.chat.id, "خطا در فرمت ورودی. لطفاً به‌درستی وارد کنید: user_id amount")
 
 def reduce_coins(message):
     try:
@@ -1579,14 +1602,14 @@ def reduce_coins(message):
         cursor = conn.cursor()
         cursor.execute("UPDATE users SET coin_balance = coin_balance - ? WHERE user_id = ? AND coin_balance >= ?", (amount, user_id, amount))
         if cursor.rowcount == 0:
-            bot.send_message(message.chat.id, " کاربر سکه کافی برای کاهش ندارد یا شناسه نامعتبر است.")
+            bot.send_message(message.chat.id, "❌ کاربر سکه کافی برای کاهش ندارد یا شناسه نامعتبر است.")
         else:
             conn.commit()
             bot.send_message(message.chat.id, f" {amount} سکه از کاربر {user_id} کسر شد.")
             bot.send_message(user_id, f"✅ سکه شما به مقدار {amount} کاهش یافت")
         conn.close()
     except:
-        bot.send_message(message.chat.id, "خطا در فرمت ورودی. ً به‌درستی وارد کنید: user_id amount")
+        bot.send_message(message.chat.id, "خطا در فرمت ورودی. لطفاً به‌درستی وارد کنید: user_id amount")
 
 def ban_user(message):
     user_id = message.text.strip()
@@ -1611,7 +1634,7 @@ def add_balance(message):
         conn.close()
         bot.reply_to(message, f"موجودی کاربر {user_id} به مقدار {amount} افزایش یافت.")
     except Exception as e:
-        bot.reply_to(message, "خطا در افزایش موجودی. ً فرمت ورودی را درست وارد کنید.")
+        bot.reply_to(message, "خطا در افزایش موجودی. لطفاً فرمت ورودی را درست وارد کنید.")
 
 def reduce_balance(message):
     try:
@@ -1623,7 +1646,7 @@ def reduce_balance(message):
         conn.close()
         bot.reply_to(message, f"موجودی کاربر {user_id} به مقدار {amount} کاهش یافت.")
     except Exception as e:
-        bot.reply_to(message, "خطا در کاهش موجودی. ً فرمت ورودی را درست وارد کنید.")
+        bot.reply_to(message, "خطا در کاهش موجودی. لطفاً فرمت ورودی را درست وارد کنید.")
 
 def broadcast_message(message):
 
