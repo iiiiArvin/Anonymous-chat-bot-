@@ -36,7 +36,8 @@ from datetime import datetime, timedelta
 
 TOKEN = ''
 ADMIN_IDS = {}
-
+ADMIN_CHAT = 
+# متفیر link رو باید با :  https://t.me/ یا https://ble.ir/ جایگذین کنید. 
 
 bot = telebot.TeleBot(TOKEN)
 
@@ -561,7 +562,7 @@ def referral_link1(call):
     if not check_channels(user_id,msg=None):
         return
     code = get_referral_code(user_id)
-    referral_link = f"https://ble.ir/{bot.get_me().username}?start=ref-{code}"
+    referral_link = f"{link}{bot.get_me().username}?start=ref-{code}"
     bot.edit_message_text(f"🔗 لینک دعوت شما:\n{referral_link}\n\nبا هر دعوت موفق 2 سکه دریافت کنید!", chat_id=user_id, message_id=call.message.message_id,
                           reply_markup=get_inline_main_menu())
     
@@ -582,7 +583,7 @@ def anon_link1(call):
     if not check_channels(user_id,msg=None):
         return
     link_id = get_anonymous_link(user_id)
-    anon_link = f"https://ble.ir/{bot.get_me().username}?start=send-{link_id}"
+    anon_link = f"{link}{bot.get_me().username}?start=send-{link_id}"
     bot.edit_message_text(f"🔗 لینک ناشناس شما:\n{anon_link}\n\nهرکس این لینک را باز کند می‌تواند به شما پیام ناشناس ارسال کند!", chat_id=user_id, message_id=call.message.message_id,
                           reply_markup=get_inline_main_menu())
     
@@ -1002,10 +1003,10 @@ def report1(call):
             conn.close()
 
             report_text = f"📩 گزارش: کاربر {user_id}، کاربر {partner_id} را گزارش کرده است. (تعداد کل گزارش‌ها: {count})"
-            bot.send_message(2136875360, report_text)
+            bot.send_message(ADMIN_CHAT, report_text)
 
             if count >= 5:
-                bot.send_message(2136875360, f"⚠️ هشدار: کاربر {partner_id} بیش از ۵ بار گزارش شده است!")
+                bot.send_message(ADMIN_CHAT, f"⚠️ هشدار: کاربر {partner_id} بیش از ۵ بار گزارش شده است!")
 
             bot.edit_message_text("✅ گزارش شما به مدیریت ارسال شد.", chat_id=user_id, message_id=call.message.message_id, reply_markup=get_inline_main_menu())
 
@@ -1369,7 +1370,7 @@ def get_title(message):
         bot.register_next_step_handler(msg, get_title)
         return
     admin_inputs[message.from_user.id]["title"] = title
-    msg = bot.send_message(message.chat.id, "مرحله 3️⃣: حالا `لینک دعوت` کانال را وارد کنید:\n http://ble.ir/ ")
+    msg = bot.send_message(message.chat.id, f"مرحله 3️⃣: حالا `لینک دعوت` کانال را وارد کنید:\n {link}  ")
     bot.register_next_step_handler(msg, get_link)
 
 def get_link(message):
