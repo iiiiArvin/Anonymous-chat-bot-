@@ -449,7 +449,7 @@ def check_channels(user_id, msg):
     
     if not_member_channels:
         markup = types.InlineKeyboardMarkup()
-        buttons = [types.InlineKeyboardButton(title, url=invite_link) 
+        buttons = [types.InlineKeyboardButton(title, url=f"https://{LINK}/{invite_link}") 
                    for _, invite_link, title in not_member_channels]
         markup.row(*buttons)
 
@@ -1373,7 +1373,7 @@ admin_inputs = {}
 
 def start_add_channel(message):
     admin_inputs[message.from_user.id] = {}
-    msg = bot.send_message(message.chat.id, "مرحله 1️⃣: لطفاً `chat_id` کانال را وارد کنید:", parse_mode="Markdown")
+    msg = bot.send_message(message.chat.id, "مرحله 1️⃣:لطفا ای دی کانال یا چت ای دی کانال رو وارد کنید\nمثال:\n\n@mychannel", parse_mode="Markdown")
     bot.register_next_step_handler(msg, get_chat_id)
 
 def get_chat_id(message):
@@ -1382,7 +1382,7 @@ def get_chat_id(message):
         admin_inputs[user_id] = {}
     
     admin_inputs[user_id]["chat_id"] = message.text.strip()
-    msg = bot.reply_to(message, "مرحله 2️⃣: حالا `نام کانال` را وارد کنید:")
+    msg = bot.reply_to(message, "مرحله 2️⃣: حالا `نام کانال` را وارد کنید:\nمثال:\n\nکانال پشتیبانی")
     bot.register_next_step_handler(msg, get_title)
 
 def get_title(message):
@@ -1392,7 +1392,7 @@ def get_title(message):
         bot.register_next_step_handler(msg, get_title)
         return
     admin_inputs[message.from_user.id]["title"] = title
-    msg = bot.send_message(message.chat.id, f"مرحله 3️⃣: حالا `لینک دعوت` کانال را وارد کنید:\n http://{LINK}/ ")
+    msg = bot.send_message(message.chat.id, f"مرحله 3️⃣: حالا ` ای دی` کانال را وارد کنید:\n ")
     bot.register_next_step_handler(msg, get_link)
 
 def get_link(message):
@@ -1457,7 +1457,7 @@ def get_expire_date(message):
             expire_at.strftime("%Y-%m-%d %H:%M:%S")
         )
         
-        bot.send_message(message.chat.id, "✅ کانال با موفقیت ثبت شد.")
+        bot.send_message(message.chat.id, "✅ کانال با موفقیت ثبت شد.\n\n توجه داشته باشید که بات باید در کانال عضو باشد.\nوادمین باشد.")
     
     except OverflowError:
         msg = bot.send_message(
