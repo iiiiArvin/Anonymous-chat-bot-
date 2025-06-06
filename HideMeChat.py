@@ -37,7 +37,7 @@ TOKEN = ''
 ADMIN_IDS = {}
 ADMIN_CHAT = 
 ADMIN_USERNAME = "" 
-LINK = "" # متفیر link رو باید با :  https://t.me/ یا https://ble.ir/ جایگذین کنید. 
+LINK = "" # متفیر link رو باید با :  t.me یا ble.ir جایگذین کنید. 
 
 bot = telebot.TeleBot(TOKEN)
 
