@@ -449,7 +449,7 @@ def check_channels(user_id, msg):
     
     if not_member_channels:
         markup = types.InlineKeyboardMarkup()
-        buttons = [types.InlineKeyboardButton(title, url=f"https://{LINK}/{invite_link}") 
+        buttons = [types.InlineKeyboardButton(title, url=f"https://{LINK}/{invite_link[1:]}") 
                    for _, invite_link, title in not_member_channels]
         markup.row(*buttons)
 
